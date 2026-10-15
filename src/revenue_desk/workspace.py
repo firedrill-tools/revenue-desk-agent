@@ -1,6 +1,8 @@
 """Synthetic domain actions; one JSON file, sequential execution only."""
 import json
+import os
 from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 
 class Workspace:
@@ -9,7 +11,23 @@ class Workspace:
         self.data = json.loads(path.read_text())
 
     def save(self):
-        self.path.write_text(json.dumps(self.data, indent=2) + "\n")
+        temporary_path = None
+        try:
+            with NamedTemporaryFile(mode="w", encoding="utf8", dir=self.path.parent,
+                                    prefix=f".{self.path.name}.", suffix=".tmp", delete=False) as staged:
+                temporary_path = Path(staged.name)
+                json.dump(self.data, staged, indent=2)
+                staged.write("\n")
+                staged.flush()
+                os.fsync(staged.fileno())
+            os.replace(temporary_path, self.path)
+        finally:
+            if temporary_path is not None:
+                temporary_path.unlink(missing_ok=True)
+
+    def account_balance(self, account_id: str) -> int:
+        return sum(max(0, invoice["total_cents"] - invoice["paid_cents"] - invoice["credit_cents"])
+                   for invoice in self.data["invoices"] if invoice["account_id"] == account_id)
 
     def context(self, invoice_id: str):
         invoice = next((i for i in self.data["invoices"] if i["id"] == invoice_id), None)
@@ -17,6 +35,8 @@ class Workspace:
             raise ValueError(f"unknown invoice: {invoice_id}")
         account = next(a for a in self.data["accounts"] if a["id"] == invoice["account_id"])
         return {"invoice": invoice.copy(), "account": account.copy(),
+                "account_invoices": [item.copy() for item in self.data["invoices"] if item["account_id"] == account["id"]],
+                "accounting_balance_cents": self.account_balance(account["id"]),
                 "calendar_slots": self.data["calendar_slots"][:]}
 
     def record(self, request_id: str, invoice_id: str, request: str, approved_credit_cents: int):
@@ -25,6 +45,7 @@ class Workspace:
             raise ValueError("request ID reused with different input")
         if not record:
             record = {"invoice_id": invoice_id, "request": request, "plan": None,
+                      "planning_observations": [],
                       "approved_credit_cents": approved_credit_cents,
                       "validated": None, "done": [], "status": "started"}
             self.data["requests"][request_id] = record
@@ -53,9 +74,9 @@ class Workspace:
         invoice.setdefault("credit_request_ids", []).append(request_id)
         self.save()
 
-    def reconcile_crm(self, account_id: str, balance_cents: int):
+    def reconcile_crm(self, account_id: str):
         account = next(a for a in self.data["accounts"] if a["id"] == account_id)
-        account["crm_balance_cents"] = balance_cents
+        account["crm_balance_cents"] = self.account_balance(account_id)
         self.save()
 
     def book(self, account_id: str, slot: str, request_id: str):

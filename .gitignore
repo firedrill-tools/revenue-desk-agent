@@ -4,4 +4,6 @@ __pycache__/
 dist/
 *.egg-info/
 workspace.json
+.runs/
+.*.tmp
 .env

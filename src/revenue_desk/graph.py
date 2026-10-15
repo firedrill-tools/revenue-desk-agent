@@ -1,6 +1,7 @@
 """LangGraph nodes separate evidence, model judgment, policy and each side effect."""
 import json
 import os
+from dataclasses import dataclass
 from typing import Literal, TypedDict
 from pydantic import BaseModel, Field
 from langchain_openai import ChatOpenAI
@@ -15,6 +16,12 @@ class Plan(BaseModel):
     requested_slot: str | None = None
 
 
+@dataclass(frozen=True)
+class PlanningOutcome:
+    plan: Plan | None
+    observation: dict
+
+
 class State(TypedDict, total=False):
     request_id: str
     invoice_id: str
@@ -24,19 +31,30 @@ class State(TypedDict, total=False):
     plan: dict
     validated: dict
     result: dict
+    plan_reused: bool
 
 
-def model_plan(state: State) -> Plan:
+def model_plan(state: State) -> PlanningOutcome:
     if not os.getenv("OPENAI_API_KEY"):
         raise RuntimeError("OPENAI_API_KEY required; no deterministic planner fallback")
-    model = ChatOpenAI(model=os.getenv("OPENAI_MODEL", "gpt-6.1-sol"))
-    return model.with_structured_output(Plan).invoke(
+    model_name = os.getenv("OPENAI_MODEL", "gpt-6.1-sol")
+    model = ChatOpenAI(model=model_name)
+    response = model.with_structured_output(Plan, include_raw=True).invoke(
         "You are a revenue desk analyst. Decide whether the customer request is to reconcile a paid "
         "invoice, issue an explicitly approved credit, or ask for human review. Base your answer only "
         "on the supplied records. Never invent a payment or promise an action before execution. "
+        "A paid selected invoice can coexist with other unpaid account invoices; use the full accounting balance when drafting account claims. "
         "If evidence conflicts, choose review. Draft an email only for an approved safe action.\n"
         + json.dumps({"request": state["request"], "approved_credit_cents": state["approved_credit_cents"],
                       "records": state["context"]}))
+    raw = response.get("raw")
+    metadata = getattr(raw, "response_metadata", None) or {}
+    observation = {"source": "model_response", "requested_model": model_name,
+                   "response_model": metadata.get("model_name") or metadata.get("model"),
+                   "usage": getattr(raw, "usage_metadata", None), "cost_usd": None,
+                   "parsed": response.get("parsing_error") is None and response.get("parsed") is not None}
+    parsed = Plan.model_validate(response["parsed"]) if observation["parsed"] else None
+    return PlanningOutcome(parsed, observation)
 
 
 def build_graph(workspace: Workspace, planner=model_plan):
@@ -46,10 +64,21 @@ def build_graph(workspace: Workspace, planner=model_plan):
 
     def plan(state: State):
         record = workspace.data["requests"][state["request_id"]]
+        reused = record["plan"] is not None
         if record["plan"] is None:
-            record["plan"] = planner(state).model_dump()
+            outcome = planner(state)
+            if isinstance(outcome, Plan):
+                outcome = PlanningOutcome(outcome, {"source": "injected_planner", "requested_model": None,
+                    "response_model": None, "usage": None, "cost_usd": None, "parsed": True})
+            record.setdefault("planning_observations", []).append(outcome.observation)
+            if outcome.plan is None:
+                record["status"] = "planning_failed"
+                workspace.save()
+                raise ValueError("model response did not contain a valid plan; observed usage retained in journal")
+            record["plan"] = outcome.plan.model_dump()
+            record["status"] = "started"
             workspace.save()
-        return {"plan": record["plan"]}
+        return {"plan": record["plan"], "plan_reused": reused}
 
     def validate(state: State):
         record = workspace.data["requests"][state["request_id"]]
@@ -82,9 +111,8 @@ def build_graph(workspace: Workspace, planner=model_plan):
         if choice == "review":
             return {}
         invoice = workspace.context(state["invoice_id"])["invoice"]
-        balance = max(0, invoice["total_cents"] - invoice["paid_cents"] - invoice["credit_cents"])
         account_id = invoice["account_id"]
-        workspace.apply(state["request_id"], "crm", lambda: workspace.reconcile_crm(account_id, balance))
+        workspace.apply(state["request_id"], "crm", lambda: workspace.reconcile_crm(account_id))
         return {}
 
     def calendar(state: State):
@@ -114,7 +142,8 @@ def build_graph(workspace: Workspace, planner=model_plan):
         record["status"] = "complete"
         workspace.save()
         return {"result": {"request_id": state["request_id"], "intent": state["validated"]["intent"],
-                           "completed_steps": record["done"][:]}}
+                           "completed_steps": record["done"][:], "plan_reused": state["plan_reused"],
+                           "planning": (record.get("planning_observations") or [None])[-1]}}
 
     graph = StateGraph(State)
     for name, fn in [("load", load), ("plan", plan), ("validate", validate), ("accounting", accounting),

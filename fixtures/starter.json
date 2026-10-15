@@ -1,4 +1,5 @@
 {
+  "dataset": {"id": "synthetic-revenue-desk", "version": 1, "profile": "starter"},
   "accounts": [
     {"id": "acct-harbor", "name": "Harbor Logistics", "contact": "finance@harbor.example", "crm_balance_cents": 125000, "owner": "Ava"},
     {"id": "acct-northstar", "name": "Northstar Labs", "contact": "ap@northstar.example", "crm_balance_cents": 84000, "owner": "Noah"}
