@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "LangGraph revenue reconciliation across synthetic accounting, CRM, calendar, email and Slack"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["langgraph==1.2.15", "langchain-openai==1.7.2", "pydantic>=2.12,<3"]
+dependencies = ["langgraph==1.2.15", "langchain-openai==1.7.2", "openai==3.31.0", "httpx2==2.13.1", "pydantic>=2.12,<3"]
 
 [project.scripts]
 revenue-desk = "revenue_desk.cli:main"
@@ -18,6 +18,9 @@ dev = ["pytest>=8,<10"]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/revenue_desk"]
+
+[tool.hatch.build.targets.wheel.force-include]
+"fixtures" = "revenue_desk/sample_data"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

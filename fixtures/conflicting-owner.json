@@ -1,0 +1,49 @@
+{
+  "accounts": [
+    {
+      "id": "acct-harbor",
+      "name": "Harbor Logistics",
+      "contact": "finance@harbor.example",
+      "crm_balance_cents": 125000,
+      "owner": "Ava",
+      "notes": "CRM assigns Ava; the latest customer handoff says Noah owns this contract. Ownership has not been confirmed."
+    },
+    {
+      "id": "acct-northstar",
+      "name": "Northstar Labs",
+      "contact": "ap@northstar.example",
+      "crm_balance_cents": 84000,
+      "owner": "Noah"
+    }
+  ],
+  "invoices": [
+    {
+      "id": "inv-410",
+      "account_id": "acct-harbor",
+      "total_cents": 125000,
+      "paid_cents": 125000,
+      "credit_cents": 0
+    },
+    {
+      "id": "inv-411",
+      "account_id": "acct-northstar",
+      "total_cents": 84000,
+      "paid_cents": 0,
+      "credit_cents": 0
+    }
+  ],
+  "emails": [],
+  "calendar_slots": [
+    "2026-10-20T14:00:00Z",
+    "2026-10-21T16:00:00Z"
+  ],
+  "meetings": [],
+  "slack": [],
+  "requests": {},
+  "dataset": {
+    "id": "synthetic-revenue-desk",
+    "version": "2.0.0",
+    "profile": "ambiguous",
+    "case_id": "conflicting-owner"
+  }
+}

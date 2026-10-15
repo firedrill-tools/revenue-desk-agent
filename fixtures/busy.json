@@ -1,17 +1,359 @@
 {
-  "dataset": {"id": "synthetic-revenue-desk", "version": 1, "profile": "busy"},
   "accounts": [
-    {"id": "acct-harbor", "name": "Harbor Logistics", "contact": "finance@harbor.example", "crm_balance_cents": 125000, "owner": "Ava"},
-    {"id": "acct-northstar", "name": "Northstar Labs", "contact": "ap@northstar.example", "crm_balance_cents": 84000, "owner": "Noah"}
+    {
+      "id": "acct-harbor",
+      "name": "Harbor Logistics",
+      "contact": "finance@harbor.example",
+      "crm_balance_cents": 125000,
+      "owner": "Ava"
+    },
+    {
+      "id": "acct-northstar",
+      "name": "Northstar Labs",
+      "contact": "ap@northstar.example",
+      "crm_balance_cents": 84000,
+      "owner": "Noah"
+    },
+    {
+      "id": "acct-003",
+      "name": "Birch Supply",
+      "contact": "finance@customer3.example",
+      "crm_balance_cents": 15300,
+      "owner": "Owner 3"
+    },
+    {
+      "id": "acct-004",
+      "name": "Cedar Foods",
+      "contact": "finance@customer4.example",
+      "crm_balance_cents": 15400,
+      "owner": "Owner 4"
+    },
+    {
+      "id": "acct-005",
+      "name": "Delta Solar",
+      "contact": "finance@customer5.example",
+      "crm_balance_cents": 15500,
+      "owner": "Owner 5"
+    },
+    {
+      "id": "acct-006",
+      "name": "Elm Mobility",
+      "contact": "finance@customer6.example",
+      "crm_balance_cents": 15600,
+      "owner": "Owner 6"
+    },
+    {
+      "id": "acct-007",
+      "name": "Fern Works",
+      "contact": "finance@customer7.example",
+      "crm_balance_cents": 15700,
+      "owner": "Owner 7"
+    },
+    {
+      "id": "acct-008",
+      "name": "Grove Energy",
+      "contact": "finance@customer8.example",
+      "crm_balance_cents": 15800,
+      "owner": "Owner 8"
+    },
+    {
+      "id": "acct-009",
+      "name": "Hearth Print",
+      "contact": "finance@customer9.example",
+      "crm_balance_cents": 15900,
+      "owner": "Owner 9"
+    },
+    {
+      "id": "acct-010",
+      "name": "Iris Networks",
+      "contact": "finance@customer10.example",
+      "crm_balance_cents": 16000,
+      "owner": "Owner 10"
+    },
+    {
+      "id": "acct-011",
+      "name": "Juniper Studio",
+      "contact": "finance@customer11.example",
+      "crm_balance_cents": 16100,
+      "owner": "Owner 11"
+    },
+    {
+      "id": "acct-012",
+      "name": "Kite Transit",
+      "contact": "finance@customer12.example",
+      "crm_balance_cents": 16200,
+      "owner": "Owner 12"
+    }
   ],
   "invoices": [
-    {"id": "inv-410", "account_id": "acct-harbor", "total_cents": 125000, "paid_cents": 125000, "credit_cents": 0},
-    {"id": "inv-411", "account_id": "acct-northstar", "total_cents": 84000, "paid_cents": 0, "credit_cents": 0},
-    {"id": "inv-412", "account_id": "acct-harbor", "total_cents": 54500, "paid_cents": 12000, "credit_cents": 0}
+    {
+      "id": "inv-410",
+      "account_id": "acct-harbor",
+      "total_cents": 125000,
+      "paid_cents": 125000,
+      "credit_cents": 0
+    },
+    {
+      "id": "inv-411",
+      "account_id": "acct-northstar",
+      "total_cents": 84000,
+      "paid_cents": 0,
+      "credit_cents": 0
+    },
+    {
+      "id": "inv-412",
+      "account_id": "acct-harbor",
+      "total_cents": 54500,
+      "paid_cents": 12000,
+      "credit_cents": 0
+    },
+    {
+      "id": "inv-b03-a",
+      "account_id": "acct-003",
+      "total_cents": 33000,
+      "paid_cents": 33000,
+      "credit_cents": 0
+    },
+    {
+      "id": "inv-b03-b",
+      "account_id": "acct-003",
+      "total_cents": 20300,
+      "paid_cents": 5000,
+      "credit_cents": 0
+    },
+    {
+      "id": "inv-b04-a",
+      "account_id": "acct-004",
+      "total_cents": 34000,
+      "paid_cents": 34000,
+      "credit_cents": 700,
+      "credit_request_ids": [
+        "prior-b04"
+      ]
+    },
+    {
+      "id": "inv-b04-b",
+      "account_id": "acct-004",
+      "total_cents": 20400,
+      "paid_cents": 5000,
+      "credit_cents": 0
+    },
+    {
+      "id": "inv-b05-a",
+      "account_id": "acct-005",
+      "total_cents": 35000,
+      "paid_cents": 35000,
+      "credit_cents": 0
+    },
+    {
+      "id": "inv-b05-b",
+      "account_id": "acct-005",
+      "total_cents": 20500,
+      "paid_cents": 5000,
+      "credit_cents": 0
+    },
+    {
+      "id": "inv-b06-a",
+      "account_id": "acct-006",
+      "total_cents": 36000,
+      "paid_cents": 36000,
+      "credit_cents": 0
+    },
+    {
+      "id": "inv-b06-b",
+      "account_id": "acct-006",
+      "total_cents": 20600,
+      "paid_cents": 5000,
+      "credit_cents": 0
+    },
+    {
+      "id": "inv-b07-a",
+      "account_id": "acct-007",
+      "total_cents": 37000,
+      "paid_cents": 37000,
+      "credit_cents": 0
+    },
+    {
+      "id": "inv-b07-b",
+      "account_id": "acct-007",
+      "total_cents": 20700,
+      "paid_cents": 5000,
+      "credit_cents": 0
+    },
+    {
+      "id": "inv-b08-a",
+      "account_id": "acct-008",
+      "total_cents": 38000,
+      "paid_cents": 38000,
+      "credit_cents": 0
+    },
+    {
+      "id": "inv-b08-b",
+      "account_id": "acct-008",
+      "total_cents": 20800,
+      "paid_cents": 5000,
+      "credit_cents": 0
+    },
+    {
+      "id": "inv-b09-a",
+      "account_id": "acct-009",
+      "total_cents": 39000,
+      "paid_cents": 39000,
+      "credit_cents": 0
+    },
+    {
+      "id": "inv-b09-b",
+      "account_id": "acct-009",
+      "total_cents": 20900,
+      "paid_cents": 5000,
+      "credit_cents": 0
+    },
+    {
+      "id": "inv-b10-a",
+      "account_id": "acct-010",
+      "total_cents": 40000,
+      "paid_cents": 40000,
+      "credit_cents": 0
+    },
+    {
+      "id": "inv-b10-b",
+      "account_id": "acct-010",
+      "total_cents": 21000,
+      "paid_cents": 5000,
+      "credit_cents": 0
+    },
+    {
+      "id": "inv-b11-a",
+      "account_id": "acct-011",
+      "total_cents": 41000,
+      "paid_cents": 41000,
+      "credit_cents": 0
+    },
+    {
+      "id": "inv-b11-b",
+      "account_id": "acct-011",
+      "total_cents": 21100,
+      "paid_cents": 5000,
+      "credit_cents": 0
+    },
+    {
+      "id": "inv-b12-a",
+      "account_id": "acct-012",
+      "total_cents": 42000,
+      "paid_cents": 42000,
+      "credit_cents": 0
+    },
+    {
+      "id": "inv-b12-b",
+      "account_id": "acct-012",
+      "total_cents": 21200,
+      "paid_cents": 5000,
+      "credit_cents": 0
+    }
   ],
-  "emails": [],
-  "calendar_slots": ["2026-10-20T14:00:00Z", "2026-10-21T16:00:00Z"],
-  "meetings": [],
-  "slack": [],
-  "requests": {}
+  "emails": [
+    {
+      "request_id": "prior-b03",
+      "to": "finance@customer3.example",
+      "body": "Prior fictional processing of inv-b03-a; remaining account balance 15300 cents."
+    },
+    {
+      "request_id": "prior-b04",
+      "to": "finance@customer4.example",
+      "body": "Prior fictional processing of inv-b04-a; remaining account balance 15400 cents."
+    }
+  ],
+  "calendar_slots": [
+    "2026-10-20T14:00:00Z",
+    "2026-10-21T16:00:00Z"
+  ],
+  "meetings": [
+    {
+      "request_id": "prior-b03",
+      "account_id": "acct-003",
+      "slot": "2026-10-19T13:00:00Z"
+    }
+  ],
+  "slack": [
+    {
+      "request_id": "prior-b03",
+      "owner": "Owner 3",
+      "body": "inv-b03-a: reconcile_paid. Fictional prior decision"
+    },
+    {
+      "request_id": "prior-b04",
+      "owner": "Owner 4",
+      "body": "inv-b04-a: credit. Fictional prior decision"
+    }
+  ],
+  "requests": {
+    "prior-b03": {
+      "invoice_id": "inv-b03-a",
+      "request": "Reconcile the paid invoice",
+      "approved_credit_cents": 0,
+      "plan": {
+        "intent": "reconcile_paid",
+        "rationale": "Fictional prior team decision",
+        "email_body": "Prior fictional processing of inv-b03-a; remaining account balance 15300 cents.",
+        "requested_slot": "2026-10-19T13:00:00Z"
+      },
+      "validated": {
+        "intent": "reconcile_paid",
+        "credit_cents": 0,
+        "slot": "2026-10-19T13:00:00Z"
+      },
+      "done": [
+        "crm",
+        "calendar",
+        "email",
+        "slack"
+      ],
+      "status": "complete",
+      "planning_observations": [
+        {
+          "source": "synthetic_fixture_history",
+          "parsed": true,
+          "usage": null,
+          "cost_usd": null
+        }
+      ]
+    },
+    "prior-b04": {
+      "invoice_id": "inv-b04-a",
+      "request": "Apply the explicitly approved credit",
+      "approved_credit_cents": 700,
+      "plan": {
+        "intent": "credit",
+        "rationale": "Fictional prior team decision",
+        "email_body": "Prior fictional processing of inv-b04-a; remaining account balance 15400 cents.",
+        "requested_slot": null
+      },
+      "validated": {
+        "intent": "credit",
+        "credit_cents": 700,
+        "slot": null
+      },
+      "done": [
+        "accounting",
+        "crm",
+        "email",
+        "slack"
+      ],
+      "status": "complete",
+      "planning_observations": [
+        {
+          "source": "synthetic_fixture_history",
+          "parsed": true,
+          "usage": null,
+          "cost_usd": null
+        }
+      ]
+    }
+  },
+  "dataset": {
+    "id": "synthetic-revenue-desk",
+    "version": "2.0.0",
+    "profile": "busy",
+    "case_id": "busy"
+  }
 }

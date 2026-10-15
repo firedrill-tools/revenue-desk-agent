@@ -1,0 +1,95 @@
+{
+  "accounts": [
+    {
+      "id": "acct-harbor",
+      "name": "Harbor Logistics",
+      "contact": "finance@harbor.example",
+      "crm_balance_cents": 0,
+      "owner": "Ava"
+    },
+    {
+      "id": "acct-northstar",
+      "name": "Northstar Labs",
+      "contact": "ap@northstar.example",
+      "crm_balance_cents": 84000,
+      "owner": "Noah"
+    }
+  ],
+  "invoices": [
+    {
+      "id": "inv-410",
+      "account_id": "acct-harbor",
+      "total_cents": 125000,
+      "paid_cents": 125000,
+      "credit_cents": 2000,
+      "credit_request_ids": [
+        "prior-credited"
+      ]
+    },
+    {
+      "id": "inv-411",
+      "account_id": "acct-northstar",
+      "total_cents": 84000,
+      "paid_cents": 0,
+      "credit_cents": 0
+    }
+  ],
+  "emails": [
+    {
+      "request_id": "prior-credited",
+      "to": "finance@harbor.example",
+      "body": "Prior fictional processing of inv-410; remaining account balance 0 cents."
+    }
+  ],
+  "calendar_slots": [
+    "2026-10-20T14:00:00Z",
+    "2026-10-21T16:00:00Z"
+  ],
+  "meetings": [],
+  "slack": [
+    {
+      "request_id": "prior-credited",
+      "owner": "Ava",
+      "body": "inv-410: credit. Fictional prior decision"
+    }
+  ],
+  "requests": {
+    "prior-credited": {
+      "invoice_id": "inv-410",
+      "request": "Apply the explicitly approved credit",
+      "approved_credit_cents": 2000,
+      "plan": {
+        "intent": "credit",
+        "rationale": "Fictional prior team decision",
+        "email_body": "Prior fictional processing of inv-410; remaining account balance 0 cents.",
+        "requested_slot": null
+      },
+      "validated": {
+        "intent": "credit",
+        "credit_cents": 2000,
+        "slot": null
+      },
+      "done": [
+        "accounting",
+        "crm",
+        "email",
+        "slack"
+      ],
+      "status": "complete",
+      "planning_observations": [
+        {
+          "source": "synthetic_fixture_history",
+          "parsed": true,
+          "usage": null,
+          "cost_usd": null
+        }
+      ]
+    }
+  },
+  "dataset": {
+    "id": "synthetic-revenue-desk",
+    "version": "2.0.0",
+    "profile": "boundary",
+    "case_id": "prior-complete"
+  }
+}

@@ -1,8 +1,7 @@
 from pathlib import Path
 import pytest
-from revenue_desk.graph import Plan, build_graph, model_plan
+from revenue_desk.graph import Plan, PlanningOutcome, build_graph, model_plan
 from revenue_desk.workspace import Workspace
-from langchain_core.messages import AIMessage
 
 FIXTURE = Path(__file__).parents[1] / "fixtures" / "starter.json"
 
@@ -121,7 +120,8 @@ def test_busy_account_recovers_from_a_new_process_without_duplicate_credit(tmp_p
     assert restarted.data["invoices"][0]["credit_cents"] == 4000
     assert restarted.data["invoices"][0]["credit_request_ids"] == ["req-1"]
     assert restarted.data["accounts"][0]["crm_balance_cents"] == 42500
-    assert len(restarted.data["emails"]) == len(restarted.data["slack"]) == 1
+    assert len(restarted.data["emails"]) == len(restarted.data["slack"]) == 3
+    assert [row["request_id"] for row in restarted.data["emails"]] == ["prior-b03", "prior-b04", "req-1"]
 
 
 def test_failed_journal_replacement_keeps_the_previous_workspace(tmp_path, monkeypatch):
@@ -138,47 +138,68 @@ def test_failed_journal_replacement_keeps_the_previous_workspace(tmp_path, monke
     assert list(tmp_path.glob(".workspace.json.*.tmp")) == []
 
 
-@pytest.mark.parametrize("usage", [None, {"input_tokens": 30, "output_tokens": 10, "total_tokens": 40}])
-def test_reported_model_usage_is_preserved_without_counting_reused_plans_as_new_calls(tmp_path, monkeypatch, usage):
-    calls = []
-    class Model:
-        def with_structured_output(self, schema, *, include_raw):
-            assert schema is Plan and include_raw is True
-            return self
-        def invoke(self, prompt):
-            calls.append(prompt)
-            return {"parsed": planned("reconcile_paid")(None), "parsing_error": None,
-                    "raw": AIMessage(content="", response_metadata={"model_name": "scripted-response-model"}, usage_metadata=usage)}
-    monkeypatch.setenv("OPENAI_API_KEY", "offline-test-not-a-provider-key")
-    monkeypatch.setenv("OPENAI_MODEL", "scripted-request-model")
-    monkeypatch.setattr("revenue_desk.graph.ChatOpenAI", lambda **_kwargs: Model())
+def test_injected_failed_plan_retains_its_explicit_observation(tmp_path):
     workspace = setup(tmp_path)
-    first = run(workspace, model_plan)
-    assert first["plan_reused"] is False
-    assert first["planning"] == {"source": "model_response", "requested_model": "scripted-request-model",
-        "response_model": "scripted-response-model", "usage": usage, "cost_usd": None, "parsed": True}
-    restarted = Workspace(workspace.path)
-    second = run(restarted, lambda _: pytest.fail("cached plan must not call a model"))
-    assert second["plan_reused"] is True
-    assert second["planning"] == first["planning"]
-    assert len(calls) == len(restarted.data["requests"]["req-1"]["planning_observations"]) == 1
-
-
-def test_unparseable_model_response_keeps_usage_and_performs_no_business_effect(tmp_path, monkeypatch):
-    class Model:
-        def with_structured_output(self, _schema, **_kwargs):
-            return self
-        def invoke(self, _prompt):
-            return {"parsed": None, "parsing_error": ValueError("synthetic invalid plan"),
-                    "raw": AIMessage(content="unparseable", usage_metadata={"input_tokens": 20, "output_tokens": 5, "total_tokens": 25})}
-    monkeypatch.setenv("OPENAI_API_KEY", "offline-test-not-a-provider-key")
-    monkeypatch.setattr("revenue_desk.graph.ChatOpenAI", lambda **_kwargs: Model())
-    workspace = setup(tmp_path)
+    observation = {"source": "synthetic_planner", "usage": None, "cost_usd": None, "parsed": False}
     with pytest.raises(ValueError, match="valid plan"):
-        run(workspace, model_plan)
+        run(workspace, lambda _: PlanningOutcome(None, observation))
     record = Workspace(workspace.path).data["requests"]["req-1"]
     assert record["status"] == "planning_failed"
-    assert record["planning_observations"][0]["usage"]["total_tokens"] == 25
-    assert record["done"] == []
+    assert record["planning_observations"] == [observation] and record["done"] == []
     assert workspace.data["emails"] == workspace.data["slack"] == []
-    assert workspace.data["invoices"][0]["credit_cents"] == 0
+
+
+def test_changed_accounting_after_partial_failure_requires_review_before_customer_email(tmp_path):
+    workspace = setup(tmp_path)
+    def unavailable(*args):
+        raise RuntimeError("controlled CRM failure")
+    workspace.reconcile_crm = unavailable
+    with pytest.raises(RuntimeError):
+        run(workspace, planned("reconcile_paid"))
+    changed = Workspace(workspace.path)
+    changed.data["invoices"][0]["paid_cents"] = 0
+    changed.save()
+    result = run(Workspace(workspace.path), lambda _: pytest.fail("original plan remains evidence"))
+    assert result["intent"] == "review" and result["context_changed"]
+    final = Workspace(workspace.path)
+    assert final.data["emails"] == []
+    assert final.data["accounts"][0]["crm_balance_cents"] == 125000
+    assert len(final.data["slack"]) == 1 and "Records changed" in final.data["slack"][0]["body"]
+    assert len(final.data["requests"]["req-1"]["context_changes"]) == 1
+
+
+def test_local_action_and_journal_are_one_commit_even_if_action_raises_after_mutation(tmp_path):
+    workspace = setup(tmp_path)
+    original = workspace.issue_credit
+    def mutate_then_fail(*args):
+        original(*args)
+        raise RuntimeError("controlled failure before transaction publication")
+    workspace.issue_credit = mutate_then_fail
+    with pytest.raises(RuntimeError):
+        run(workspace, planned("credit"), request="Issue approved credit", approved_credit_cents=2000)
+    persisted = Workspace(workspace.path)
+    assert persisted.data["invoices"][0]["credit_cents"] == workspace.data["invoices"][0]["credit_cents"] == 0
+    assert persisted.data["requests"]["req-1"]["done"] == []
+    result = run(persisted, lambda _: pytest.fail("persisted plan is reused"), request="Issue approved credit", approved_credit_cents=2000)
+    assert result["intent"] == "credit" and persisted.data["invoices"][0]["credit_cents"] == 2000
+
+
+def test_completed_replay_remains_read_only_even_after_business_state_changes(tmp_path):
+    workspace = setup(tmp_path)
+    first = run(workspace, planned("reconcile_paid"))
+    workspace.data["invoices"][0]["paid_cents"] = 0
+    workspace.save()
+    before = workspace.path.read_bytes()
+    result = run(Workspace(workspace.path), lambda _: pytest.fail("completed replay cannot call planner"))
+    assert result["replayed"] and result["plan_reused"]
+    assert result["intent"] == first["intent"] and result["planning"] == first["planning"]
+    assert workspace.path.read_bytes() == before
+
+
+@pytest.mark.parametrize("amount", [-1, True, 1.5])
+def test_invalid_approval_is_rejected_before_model_or_journal(tmp_path, amount):
+    workspace = setup(tmp_path)
+    before = workspace.path.read_bytes()
+    with pytest.raises(ValueError):
+        run(workspace, lambda _: pytest.fail("invalid input cannot call planner"), approved_credit_cents=amount)
+    assert workspace.path.read_bytes() == before

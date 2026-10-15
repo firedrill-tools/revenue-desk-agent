@@ -1,16 +1,27 @@
 """Synthetic domain actions; one JSON file, sequential execution only."""
 import json
 import os
+from copy import deepcopy
+from hashlib import sha256
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from .contracts import WorkspaceData
 
 
 class Workspace:
     def __init__(self, path: Path):
         self.path = path
-        self.data = json.loads(path.read_text())
+        self._defer_save = False
+        self.reload()
+
+    def reload(self):
+        self.data = json.loads(self.path.read_text())
+        WorkspaceData.model_validate(self.data)
 
     def save(self):
+        if self._defer_save:
+            return
+        WorkspaceData.model_validate(self.data)
         temporary_path = None
         try:
             with NamedTemporaryFile(mode="w", encoding="utf8", dir=self.path.parent,
@@ -39,6 +50,9 @@ class Workspace:
                 "accounting_balance_cents": self.account_balance(account["id"]),
                 "calendar_slots": self.data["calendar_slots"][:]}
 
+    def context_hash(self, invoice_id):
+        return sha256(json.dumps(self.context(invoice_id), sort_keys=True).encode()).hexdigest()
+
     def record(self, request_id: str, invoice_id: str, request: str, approved_credit_cents: int):
         record = self.data["requests"].get(request_id)
         if record and (record["invoice_id"], record["request"], record["approved_credit_cents"]) != (invoice_id, request, approved_credit_cents):
@@ -46,6 +60,8 @@ class Workspace:
         if not record:
             record = {"invoice_id": invoice_id, "request": request, "plan": None,
                       "planning_observations": [],
+                      "initial_state_sha256": sha256(self.path.read_bytes()).hexdigest(),
+                      "dataset": deepcopy(self.data.get("dataset")),
                       "approved_credit_cents": approved_credit_cents,
                       "validated": None, "done": [], "status": "started"}
             self.data["requests"][request_id] = record
@@ -61,10 +77,26 @@ class Workspace:
     def apply(self, request_id: str, step: str, action):
         if step in self.data["requests"][request_id]["done"]:
             return
-        action()
-        self.mark(request_id, step)
+        # Every local effect and its journal marker share one atomic JSON commit.
+        # A future remote connector cannot inherit this transaction guarantee.
+        previous = deepcopy(self.data)
+        try:
+            self._defer_save = True
+            action()
+            record = self.data["requests"][request_id]
+            record["done"].append(step)
+            record["execution_context_sha256"] = self.context_hash(record["invoice_id"])
+            self._defer_save = False
+            self.save()
+        except Exception:
+            self.data = previous
+            raise
+        finally:
+            self._defer_save = False
 
     def issue_credit(self, invoice_id: str, amount_cents: int, request_id: str):
+        if type(amount_cents) is not int or amount_cents <= 0:
+            raise ValueError("credit must be a positive integer amount")
         invoice = next(i for i in self.data["invoices"] if i["id"] == invoice_id)
         if request_id in invoice.get("credit_request_ids", []):
             return
