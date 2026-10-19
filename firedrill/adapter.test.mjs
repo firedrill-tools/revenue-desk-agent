@@ -123,6 +123,11 @@ test('separate invocations preserve distinct private workspace copies after actu
   };
   const first = attempt();
   const original = await readFile(first);
+  const mapping = join(first, '..', 'invocation.json');
+  const saved = JSON.parse(await readFile(mapping));
+  assert.deepEqual(saved, { source: 'command_adapter', identity: { runId: 'offline-run', attemptId: 'offline-attempt', scenarioId: 'starter' } });
+  assert.equal((await stat(mapping)).mode & 0o777, 0o600);
+
   const second = attempt();
   assert.notEqual(first, second);
   assert.deepEqual(await readFile(first), original);

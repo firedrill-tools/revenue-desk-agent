@@ -6,14 +6,14 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 const cases = new Set(['starter', 'approved-credit', 'unapproved-credit', 'prior-complete']);
 const id = value => typeof value === 'string' && /^[A-Za-z0-9_-]{1,80}$/.test(value);
 
-export async function runApplication(input, parameters, signal) {
+export async function runApplication(input, parameters, signal, invocation) {
   if (Object.keys(input).some(key => !['caseId', 'requestId', 'invoiceId', 'request', 'approvedCreditCents'].includes(key)) ||
       !cases.has(input.caseId) || !id(input.requestId) || !id(input.invoiceId) ||
       typeof input.request !== 'string' || input.request.length < 5 || input.request.length > 4000 || !input.request.trim() || input.request.includes('\0') ||
       !Number.isSafeInteger(input.approvedCreditCents) || input.approvedCreditCents < 0) {
     throw new Error('Supply a reviewed case, exact request/invoice IDs, bounded request and independent integer credit approval.');
   }
-  const directory = await privateDirectory(root);
+  const directory = await privateDirectory(root, invocation);
   const state = join(directory, 'workspace.json');
   const cli = ['uv', 'run', '--locked', '--no-sync', 'revenue-desk'];
   const env = { ...process.env, ...(parameters.model ? { OPENAI_MODEL: parameters.model } : {}) };

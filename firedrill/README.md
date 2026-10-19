@@ -42,3 +42,5 @@ Preserve the operation ID and private journal after uncertainty. Use `--resume O
 Ordinary CI is offline. Use the [live CI generator](https://docs.firedrill.run/guides/ci) only with actual scope, protected credentials and selected budgets. Authenticated persisted happy/negative runs, live model quality/cost, real financial/account connectors, publication and licensing remain separate gates.
 
 References: [SDK](https://docs.firedrill.run/sdk/typescript), [command targets](https://docs.firedrill.run/guides/callbacks), [operator MCP](https://docs.firedrill.run/guides/control-mcp).
+
+Before application dispatch, each private workspace saves the validated outer run/attempt/scenario IDs in `invocation.json`. This maps interrupted runs to local state; it is separate from the SDK recovery journal and grants no application authority.

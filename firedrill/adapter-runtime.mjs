@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { mkdir, mkdtemp, chmod } from 'node:fs/promises';
+import { mkdir, mkdtemp, chmod, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { TARGET_INVOCATION_VERSION } from '@firedrill-run/sdk';
 
@@ -48,11 +48,19 @@ export function applicationEnvironment(source = process.env, additions = {}) {
     !key.startsWith('FIREDRILL_') && !key.startsWith('ACTIONS_ID_TOKEN_')));
 }
 
-export async function privateDirectory(root) {
+export async function privateDirectory(root, invocation) {
   const parent = join(root, '.runs', 'firedrill');
   await mkdir(parent, { recursive: true, mode: 0o700 });
   const directory = await mkdtemp(join(parent, 'attempt-'));
   await chmod(directory, 0o700);
+  // Save the outer execution identity before launching application work. This is
+  // a local locator, not the SDK recovery journal or proof of platform authority.
+  const identity = invocation === undefined ? null : {
+    runId: invocation.runId, attemptId: invocation.attemptId, scenarioId: invocation.scenarioId,
+  };
+  if (identity && !Object.values(identity).every(identifier)) throw new Error('Invalid invocation identity.');
+  await writeFile(join(directory, 'invocation.json'), `${JSON.stringify({ source: 'command_adapter', identity })}\n`,
+    { flag: 'wx', mode: 0o600, flush: true });
   // Retain state/evidence after success or failure. A new attempt never resets an old one.
   return directory;
 }
@@ -120,7 +128,8 @@ export async function commandMain(application) {
   try {
     const invocation = await readStdin();
     controller.signal.throwIfAborted();
-    const result = await application(invocation.input, invocation.configuration.parameters, controller.signal);
+    const result = await application(invocation.input, invocation.configuration.parameters, controller.signal,
+      { runId: invocation.runId, attemptId: invocation.attemptId, scenarioId: invocation.scenario.id });
     controller.signal.throwIfAborted();
     process.stdout.write(`${JSON.stringify(result)}\n`);
   } catch (error) {
