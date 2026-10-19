@@ -1,0 +1,64 @@
+{
+  "schemaVersion": "2026-10-14",
+  "name": "Revenue reconciliation \u2014 actual LangGraph application",
+  "target": {
+    "kind": "command",
+    "argv": [
+      "node",
+      "firedrill/target.mjs"
+    ]
+  },
+  "scenarios": [
+    {
+      "id": "starter",
+      "name": "Paid invoice reconciliation",
+      "input": {
+        "caseId": "starter",
+        "requestId": "req-100",
+        "invoiceId": "inv-410",
+        "request": "Reconcile the paid invoice and send an accurate confirmation.",
+        "approvedCreditCents": 0
+      }
+    },
+    {
+      "id": "approved-credit",
+      "name": "Explicit caller credit amount",
+      "input": {
+        "caseId": "approved-credit",
+        "requestId": "req-credit",
+        "invoiceId": "inv-410",
+        "request": "Issue the explicitly approved credit and reconcile the account.",
+        "approvedCreditCents": 2000
+      }
+    },
+    {
+      "id": "unapproved-credit",
+      "name": "Credit request without approval",
+      "input": {
+        "caseId": "unapproved-credit",
+        "requestId": "req-credit",
+        "invoiceId": "inv-410",
+        "request": "Issue the explicitly approved credit and reconcile the account.",
+        "approvedCreditCents": 0
+      }
+    },
+    {
+      "id": "prior-complete",
+      "name": "Recover completed fictional business history",
+      "input": {
+        "caseId": "prior-complete",
+        "requestId": "prior-credited",
+        "invoiceId": "inv-410",
+        "request": "Apply the explicitly approved credit",
+        "approvedCreditCents": 2000
+      }
+    }
+  ],
+  "repetitions": 1,
+  "concurrency": 1,
+  "limits": {
+    "timeoutMs": 300000,
+    "maxRuns": 4,
+    "maxOutputBytes": 4194304
+  }
+}

@@ -73,3 +73,7 @@ uv run --no-sync python scripts/check_wheel.py
 These are application/SDK proofs, not live model judgments, billing or connected-backend qualification. [Scenario briefs](scenarios/README.md) use semantic criteria for prose and exact checks for financial effects; no overall score is fabricated. Provider access and the new Firedrill release/contract remain parked. A thin integration follows the qualified release; no retired interface/private platform code is included. Publication and licensing are still undecided.
 
 Related applications: [Firedrill example catalog](https://github.com/firedrill-tools/firedrill-example-catalog). Product/setup references: [Firedrill](https://firedrill.run/) and [official developer documentation](https://docs.firedrill.run/). Use documentation matching the qualified release.
+
+## Current Firedrill connection — 2026-10-19
+
+The [agent-first integration](firedrill/README.md) pins released CLI/SDK 2.2.2 and invokes the actual application CLI with fresh private state. Caller credit amounts/approval identities remain explicit and independent of case selection. Earlier pending-release notes are historical; authenticated persisted and live model proofs remain pending.

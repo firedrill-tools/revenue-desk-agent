@@ -7,3 +7,5 @@ workspace.json
 .runs/
 .*.tmp
 .env
+
+node_modules/

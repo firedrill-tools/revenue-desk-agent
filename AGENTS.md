@@ -10,3 +10,7 @@
 - Commands: `uv sync --dev --locked`; `uv run --no-sync pytest -q`; help/list; `uv build --wheel`; `uv run --no-sync python scripts/check_wheel.py`. Initialize with `--init-case CASE --workspace NEW_PATH`; inspect returned task arguments before a selected paid execution.
 - Actual model evidence follows qualified locked SDKs, optional OPENAI_BASE_URL, OPENAI_MODEL and OPENAI_API_KEY. A process/client timeout does not prove provider-side cancellation or billing stopped. No background worker/job is created.
 - Firedrill integration awaits the new release/contract. Never copy retired APIs/private platform code or claim live model quality from offline HTTP tests. Keep .runs/databases/credentials private. Publication/license and paid campaigns require deliberate selection.
+
+## Current Firedrill connection — 2026-10-19
+
+Read `firedrill/README.md` for the optional released CLI/SDK 2.2.2 command integration. Preserve actual native framework execution and caller-controlled exact credit/approval fields; never infer authority from a selected case. Keep private state and failed effects intact. Run integration checks with the existing application/package gates. Release availability supersedes older pending-release notes; authenticated persisted and live provider proof remain pending.
