@@ -88,7 +88,7 @@ uv run --no-sync python scripts/check_wheel.py
 
 These are application/SDK proofs, not live model judgments, billing or connected-backend qualification. [Scenario briefs](scenarios/README.md) use semantic criteria for prose and exact checks for financial effects; no overall score is fabricated. Provider access and authenticated persisted Firedrill runs remain parked. The included [Firedrill integration](firedrill/README.md) invokes the real application. A project license has not been selected.
 
-Related applications: [Firedrill example catalog](https://github.com/firedrill-tools/firedrill-example-catalog). Product/setup references: [Firedrill](https://firedrill.run/) and [official developer documentation](https://docs.firedrill.run/). Use documentation matching the qualified release.
+Related applications: [Firedrill examples](https://docs.firedrill.run/guides/examples). Product/setup references: [Firedrill](https://firedrill.run/) and [official developer documentation](https://docs.firedrill.run/). Use documentation matching the qualified release.
 
 ## Current Firedrill connection — 2026-10-19
 
