@@ -1,6 +1,20 @@
-# Revenue Desk agent
+# Revenue desk agent with LangGraph and OpenAI
 
 A LangGraph workflow reconciles a customer request across synthetic accounting, CRM, calendar, email and Slack records. An OpenAI structured planning step interprets the request. Separate graph nodes validate policy and commit each system effect. The saved request journal supports recovery after partial completion and preserves original planning evidence.
+
+## Simulate with Firedrill
+
+[Firedrill](https://firedrill.run/) is a simulation platform for AI agents.
+Start from this repository’s root:
+
+```sh
+npx firedrill-run init
+```
+
+Sign in and choose your project, then follow the [simulation run guide](firedrill/README.md)
+for application dependencies, a preview and the reviewed scenarios. Your agent runs
+locally or in your CI; model credentials stay separate from Firedrill sign-in.
+The included recipes record outcomes without an automatic quality score or CI gate.
 
 ## Run one request
 
@@ -70,7 +84,7 @@ uv run --no-sync python scripts/check_wheel.py
 
 **53 offline checks passed.** Native checks retain the actual LangGraph, LangChain and OpenAI implementations and replace only HTTP transport. They cover strict schema serialization, finish/refusal/invalid output, retained failed usage, missing/zero counters, one attempt on 503, client cleanup, CLI success/failure and original evidence on replay. Policy/state checks reproduce a payment correction being ignored after partial failure and verify the fix, atomic local effects, restarted credit recovery and preservation of unrelated busy state. All ten initialized cases run through the graph with explicitly injected planners to check their local boundaries. Packaged selection/initialization also runs outside the checkout without credentials.
 
-These are application/SDK proofs, not live model judgments, billing or connected-backend qualification. [Scenario briefs](scenarios/README.md) use semantic criteria for prose and exact checks for financial effects; no overall score is fabricated. Provider access and the new Firedrill release/contract remain parked. A thin integration follows the qualified release; no retired interface/private platform code is included. Publication and licensing are still undecided.
+These are application/SDK proofs, not live model judgments, billing or connected-backend qualification. [Scenario briefs](scenarios/README.md) use semantic criteria for prose and exact checks for financial effects; no overall score is fabricated. Provider access and authenticated persisted Firedrill runs remain parked. The included [Firedrill integration](firedrill/README.md) invokes the real application. Publication and licensing are still undecided.
 
 Related applications: [Firedrill example catalog](https://github.com/firedrill-tools/firedrill-example-catalog). Product/setup references: [Firedrill](https://firedrill.run/) and [official developer documentation](https://docs.firedrill.run/). Use documentation matching the qualified release.
 
